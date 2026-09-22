@@ -876,6 +876,9 @@ button.fab-trigger {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: center;
+  /* Réserve la hauteur d'un bouton en permanence : sinon l'apparition du bouton "Mabrouk" (le seul
+     visible la plupart du temps) fait sauter tout le plateau au-dessus au moment de votre tour. */
+  min-height: 44px;
 }
 .mabrouk-scope .actions button {
   flex: 1 1 auto;
@@ -963,12 +966,14 @@ button.fab-trigger {
 /* Carte volante (échange avec la pioche tenue, la défausse, ou entre deux joueurs, voir FlyingCard
    dans Cards.tsx) : rendue en portail dans <body>, donc globale comme .drag-ghost. Décrit un arc
    au-dessus du plateau (via --x0/--y0/.../--lift posés par React) pour bien montrer le trajet,
-   plutôt qu'un aller direct qui passerait inaperçu sous les autres éléments. */
+   plutôt qu'un aller direct qui passerait inaperçu sous les autres éléments.
+   z-index sous .overlay (100) : un vol encore en cours au moment où la manche se termine ne doit
+   jamais s'afficher par-dessus l'écran de fin de manche (voir aussi le nettoyage dans Game.tsx). */
 .fly-card {
   position: fixed;
-  z-index: 1500;
+  z-index: 90;
   pointer-events: none;
-  filter: drop-shadow(0 10px 10px #000a);
+  filter: drop-shadow(0 8px 8px #000a);
   left: var(--x0);
   top: var(--y0);
   width: var(--w0);
@@ -990,7 +995,7 @@ button.fab-trigger {
     top: calc((var(--y0) + var(--y1)) / 2 - var(--lift));
     width: calc((var(--w0) + var(--w1)) / 2);
     height: calc((var(--h0) + var(--h1)) / 2);
-    transform: rotate(-8deg) scale(1.15);
+    transform: rotate(-4deg) scale(1.06);
   }
   100% {
     left: var(--x1);

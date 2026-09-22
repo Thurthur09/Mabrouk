@@ -45,6 +45,9 @@ interface MatProps {
   onMove?: (cardId: string, x: number, y: number) => void;
   onDropDiscard?: (cardId: string) => void;
   small?: boolean;
+  /** Cartes à ne pas encore afficher : le temps qu'une carte volante (FlyingCard) arrive à cet
+   * emplacement, pour que le tapis montre bien une carte de moins pendant tout l'échange. */
+  hidden?: Set<string>;
 }
 
 interface Drag {
@@ -71,7 +74,7 @@ function overDiscard(x: number, y: number): boolean {
  * Glisser une carte : elle suit le doigt/la souris partout à l'écran ; lâchée sur la défausse,
  * c'est une demande de défausse rapide ; lâchée sur le tapis, elle change de place.
  */
-export function Mat({ cards, color, draggable, selectable, selected, onTap, onMove, onDropDiscard, small }: MatProps) {
+export function Mat({ cards, color, draggable, selectable, selected, onTap, onMove, onDropDiscard, small, hidden }: MatProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   // Position posée localement en attendant la confirmation du serveur (évite tout saut visuel).
@@ -82,9 +85,11 @@ export function Mat({ cards, color, draggable, selectable, selected, onTap, onMo
 
   const setHot = (hot: boolean) => discardEl()?.classList.toggle('hot', hot);
 
+  const visible = hidden?.size ? cards.filter((c) => !hidden.has(c.id)) : cards;
+
   return (
     <div className={`mat ${small ? 'small' : ''}`} ref={ref} style={{ ['--mat' as string]: color }}>
-      {cards.map((c) => {
+      {visible.map((c) => {
         const dragging = drag?.id === c.id;
         const red = c.redUntil !== null;
         const sel = selected === c.id;
@@ -174,9 +179,9 @@ export interface FlightSpec {
  * montrer QUELLE carte part et OÙ elle arrive. Rendue en portail dans <body>, comme .drag-ghost.
  * Sert aux échanges avec la pioche tenue, la défausse, et l'échange à l'aveugle entre joueurs (Game.tsx).
  */
-export function FlyingCard({ face, from, to, duration = 1.4 }: { face: FaceView | null; from: DOMRect; to: DOMRect; duration?: number }) {
+export function FlyingCard({ face, from, to, duration = 0.75 }: { face: FaceView | null; from: DOMRect; to: DOMRect; duration?: number }) {
   const dist = Math.hypot(to.left - from.left, to.top - from.top);
-  const lift = Math.max(130, Math.min(280, dist * 0.4));
+  const lift = Math.max(90, Math.min(200, dist * 0.3));
   const style = {
     '--x0': `${from.left}px`,
     '--y0': `${from.top}px`,

@@ -10,27 +10,27 @@ const medal = (r: number) => (r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '�
 
 /** Places des adversaires autour de la table (version web), en % de la scène : [x, y] du centre. */
 const SEATS: Record<number, [number, number][]> = {
-  1: [[50, 7]],
+  1: [[50, 3]],
   2: [
-    [27, 19],
-    [73, 19],
+    [27, 15],
+    [73, 15],
   ],
   3: [
     [12, 47],
-    [50, 6],
+    [50, 2],
     [88, 47],
   ],
   4: [
     [11, 54],
-    [34, 17],
-    [66, 17],
+    [34, 13],
+    [66, 13],
     [89, 54],
   ],
   5: [
     [9, 58],
-    [22, 25],
-    [50, 5],
-    [78, 25],
+    [22, 20],
+    [50, 1],
+    [78, 20],
     [91, 58],
   ],
 };
@@ -90,26 +90,53 @@ export function Game({ room }: { room: RoomView }) {
   const flashId = useRef(0);
   const [bubbles, setBubbles] = useState<Record<string, { id: number; emote: string }>>({});
   const bubbleId = useRef(0);
-  const FLIGHT_MS = 1400;
+  const FLIGHT_MS = 750;
   const [flights, setFlights] = useState<{ id: number; face: FaceView | null; from: DOMRect; to: DOMRect }[]>([]);
   const flightId = useRef(0);
+  // Cartes "en vol" à ne pas encore afficher côté données : sans ça, la nouvelle carte apparaîtrait
+  // sur le tapis dès la mise à jour du serveur (quasi instantanée), bien avant que son fantôme volant
+  // n'ait fini son trajet. Le tapis doit montrer une carte de moins pendant tout l'échange.
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set());
+  const hideCard = (cid: string) => setHiddenIds((s) => new Set(s).add(cid));
+  const revealCard = (cid: string) =>
+    setHiddenIds((s) => {
+      if (!s.has(cid)) return s;
+      const n = new Set(s);
+      n.delete(cid);
+      return n;
+    });
   // Toujours à jour (contrairement à `view` capturée par la fermeture de l'effet ci-dessous, qui ne se
   // recrée que lorsque view.me/players.length changent) : nécessaire pour lire view.held au bon moment.
   const viewRef = useRef(view);
   viewRef.current = view;
 
   /** Anime une carte volant en arc au-dessus du plateau, d'un élément [data-card-id] à un autre :
-   * échange avec la pioche tenue, avec la défausse, ou entre deux joueurs (échange à l'aveugle). */
-  const flyCard = (face: FaceView | null, fromId: string, toId: string) => {
+   * échange avec la pioche tenue, avec la défausse, ou entre deux joueurs (échange à l'aveugle).
+   * `hideUntilArrival` : la carte qui part de `fromId` reste masquée sur le tapis de destination
+   * jusqu'à la fin du vol (voir `hidden` sur <Mat>), pour l'effet "une carte de moins" demandé. */
+  const flyCard = (face: FaceView | null, fromId: string, toId: string, hideUntilArrival = false) => {
     const fromEl = document.querySelector(`[data-card-id="${fromId}"]`);
     const toEl = document.querySelector(`[data-card-id="${toId}"]`);
     if (!fromEl || !toEl) return;
+    if (hideUntilArrival) hideCard(fromId);
     const id = ++flightId.current;
     const from = fromEl.getBoundingClientRect();
     const to = toEl.getBoundingClientRect();
     setFlights((f) => [...f, { id, face, from, to }]);
-    setTimeout(() => setFlights((f) => f.filter((x) => x.id !== id)), FLIGHT_MS);
+    setTimeout(() => {
+      setFlights((f) => f.filter((x) => x.id !== id));
+      if (hideUntilArrival) revealCard(fromId);
+    }, FLIGHT_MS);
   };
+
+  // Une manche qui se termine pendant qu'un échange est encore animé ne doit jamais laisser un
+  // fantôme volant (carte face visible) s'afficher par-dessus l'écran de fin de manche.
+  useEffect(() => {
+    if (view.phase === 'ROUND_END' || view.phase === 'GAME_END') {
+      setFlights([]);
+      setHiddenIds(new Set());
+    }
+  }, [view.phase]);
 
   useEffect(() => {
     return onEmotes((playerId, emote) => {
@@ -145,8 +172,8 @@ export function Game({ room }: { room: RoomView }) {
             break;
           case 'takeDiscard': {
             const d = e.data as { takenCardId: string; discardedCardId: string; placed: FaceView; takenFace: FaceView };
-            flyCard(d.takenFace, d.takenCardId, d.discardedCardId);
-            flyCard(d.placed, d.discardedCardId, d.takenCardId);
+            flyCard(d.takenFace, d.takenCardId, d.discardedCardId, true); // arrive sur le tapis : masquée jusqu'à l'atterrissage
+            flyCard(d.placed, d.discardedCardId, d.takenCardId); // part vers la défausse : disparaît naturellement du tapis
             play('discard');
             break;
           }
@@ -154,16 +181,17 @@ export function Game({ room }: { room: RoomView }) {
             const d = e.data as { placedCardId: string; discardedCardId: string; discarded: FaceView };
             const held = viewRef.current.held;
             const heldFace = held?.cardId === d.placedCardId && held.playerId === viewRef.current.me ? held.face : null;
-            flyCard(heldFace, d.placedCardId, d.discardedCardId);
+            flyCard(heldFace, d.placedCardId, d.discardedCardId, true);
             flyCard(d.discarded, d.discardedCardId, d.placedCardId);
             play('discard');
             break;
           }
           case 'swap': {
-            // Échange à l'aveugle : les deux cartes restent cachées, seul leur trajet croisé se voit.
+            // Échange à l'aveugle : les deux cartes restent cachées, seul leur trajet croisé se voit ;
+            // chaque tapis affiche une carte de moins pendant que l'autre carte arrive.
             const d = e.data as { ownCardId: string; targetCardId: string };
-            flyCard(null, d.ownCardId, d.targetCardId);
-            flyCard(null, d.targetCardId, d.ownCardId);
+            flyCard(null, d.ownCardId, d.targetCardId, true);
+            flyCard(null, d.targetCardId, d.ownCardId, true);
             play('swap');
             break;
           }
@@ -323,6 +351,7 @@ export function Game({ room }: { room: RoomView }) {
             connected={seatOf(p.id)?.connected ?? true}
             selectable={oppSelectable && p.status === 'active'}
             onTap={(cid) => onTapOpp(p.id, cid)}
+            hidden={hiddenIds}
             canKick={!!seatOf(p.id) && !seatOf(p.id)!.isBot && p.status === 'active' && !votes[p.id]}
             onKick={() => {
               if (confirm(`Lancer un vote pour exclure ${p.name} ?`)) api.send({ t: 'voteKick', target: p.id });
@@ -409,6 +438,7 @@ export function Game({ room }: { room: RoomView }) {
             onTap={onTapOwn}
             onMove={(id, x, y) => api.action({ type: 'moveCard', cardId: id, x, y })}
             onDropDiscard={(id) => api.action({ type: 'matchDiscard', cardId: id })}
+            hidden={hiddenIds}
           />
           <div className="emote-fab-wrap">
             <EmoteButton onPick={(id) => api.emote(id)} />
@@ -475,6 +505,7 @@ function OpponentMat({
   onTap,
   canKick,
   onKick,
+  hidden,
 }: {
   p: PlayerGameView;
   seat: [number, number];
@@ -485,6 +516,7 @@ function OpponentMat({
   onTap: (cardId: string) => void;
   canKick: boolean;
   onKick: () => void;
+  hidden?: Set<string>;
 }) {
   const active = view.currentPlayer === p.id;
   const removed = p.status === 'removed';
@@ -516,7 +548,7 @@ function OpponentMat({
       {removed ? (
         <div className="excluded">exclu</div>
       ) : (
-        <Mat cards={p.hand} color={p.color} small selectable={selectable ? 'all' : null} onTap={onTap} />
+        <Mat cards={p.hand} color={p.color} small selectable={selectable ? 'all' : null} onTap={onTap} hidden={hidden} />
       )}
       <div className="opp-foot muted">
         {p.cardCount} carte{p.cardCount > 1 ? 's' : ''} · {p.score} pts
