@@ -2,7 +2,7 @@ import type { GameEvent, PlayerId } from '@mabrouk/core';
 
 export const SUIT_SYMBOL: Record<string, string> = { S: '♠', H: '♥', D: '♦', C: '♣' };
 export const isRedSuit = (s: string): boolean => s === 'H' || s === 'D';
-export const rankLabel = (r: string): string => (r === 'K' ? 'R' : r);
+export const rankLabel = (r: string): string => (r);
 export const rankName = (r: string): string => (r === 'K' ? 'Roi' : r === 'A' ? 'As' : r);
 
 type Face = { rank: string; suit: string; value: number };
