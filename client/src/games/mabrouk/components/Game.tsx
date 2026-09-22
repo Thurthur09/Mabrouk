@@ -526,12 +526,14 @@ function OpponentMat({
       className={`opp ${active ? 'active' : ''} ${removed ? 'removed' : ''}`}
       style={{ ['--c' as string]: p.color, ['--x' as string]: `${seat[0]}%`, ['--y' as string]: `${seat[1]}%` }}
     >
+      {bubble && (
+        // Ancrée sur .opp en entier (pas .opp-head) : sinon côté "below", la bulle atterrit juste sous
+        // l'en-tête, en plein sur les cartes du tapis au lieu d'apparaître sous le tapis complet.
+        <span className={`emote-bubble ${emoteVert === 'below' ? 'below' : ''} h-${emoteHoriz}`}>
+          <EmoteImg id={bubble} />
+        </span>
+      )}
       <div className="opp-head">
-        {bubble && (
-          <span className={`emote-bubble ${emoteVert === 'below' ? 'below' : ''} h-${emoteHoriz}`}>
-            <EmoteImg id={bubble} />
-          </span>
-        )}
         <Avatar id={p.avatar} color={p.color} size={26} />
         <span className="nm">{p.name}</span>
         {active && <span className="turn-badge">joue</span>}

@@ -640,6 +640,7 @@ button.fab-trigger {
   grid-template-columns: repeat(3, 1fr);
 }
 .mabrouk-scope .opp {
+  position: relative;
   background: color-mix(in srgb, var(--c) 14%, #1a1250);
   border: 3px solid var(--ink);
   box-shadow: 0 4px 0 var(--ink), inset 0 0 0 2px color-mix(in srgb, var(--c) 55%, transparent);
