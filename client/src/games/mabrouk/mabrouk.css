@@ -1,0 +1,1455 @@
+/* ==========================================================================
+   MABROUK (le jeu) — direction artistique « cartoon espace »
+   Contours epais ombres portees franches couleurs saturees sur fond galactique.
+   Tout est scope sous .mabrouk-scope pour ne jamais fuiter sur le reste de la plateforme.
+   ========================================================================== */
+.mabrouk-scope {
+  color-scheme: dark;
+  --ink: #120b3a;
+  --bg: #0d0a2a;
+  --panel: #1f1758;
+  --panel2: #2c2382;
+  --line: #4636b5;
+  --text: #f4f1ff;
+  --muted: #a89fe0;
+  --accent: #38e1ff;
+  --pink: #ff5fa8;
+  --gold: #ffd23f;
+  --good: #4ee6a0;
+  --bad: #ff6b81;
+  --radius: 18px;
+  --shadow: 0 4px 0 var(--ink);
+  font-family: 'Fredoka', 'Baloo 2', 'Trebuchet MS', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  color: var(--text);
+  background:
+    radial-gradient(900px 500px at 12% 8%, #5b2fc966, transparent 70%),
+    radial-gradient(800px 600px at 90% 90%, #0e8fd066, transparent 70%),
+    radial-gradient(600px 400px at 80% 15%, #ff5fa833, transparent 70%),
+    var(--bg);
+  overscroll-behavior: none;
+  -webkit-user-select: none;
+  user-select: none;
+  overflow-x: hidden;
+}
+/* Repliee dans une page plateforme (ex. les regles) : pas de plein ecran force. */
+.mabrouk-scope.embed {
+  min-height: 0;
+  border-radius: 24px;
+  overflow: hidden;
+}
+/* Champ d'etoiles (deux couches qui scintillent), cantonne a la zone du jeu */
+.mabrouk-scope::before,
+.mabrouk-scope::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.mabrouk-scope::before {
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 90px 120px, #cfe9ff, transparent),
+    radial-gradient(2px 2px at 160px 70px, #ffe9a8, transparent),
+    radial-gradient(1px 1px at 230px 160px, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 60px 200px, #ffd0ea, transparent);
+  background-size: 260px 240px;
+  animation: twinkle 4s ease-in-out infinite;
+}
+.mabrouk-scope::after {
+  background-image:
+    radial-gradient(1px 1px at 40px 60px, #fff, transparent),
+    radial-gradient(2px 2px at 140px 20px, #b8f3ff, transparent),
+    radial-gradient(1px 1px at 200px 140px, #fff, transparent);
+  background-size: 310px 290px;
+  animation: twinkle 6s ease-in-out infinite reverse;
+}
+
+.mabrouk-scope button {
+  font: inherit;
+  font-weight: 600;
+  color: var(--text);
+  background: linear-gradient(180deg, #4a3cc9, #33279a);
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: 9px 14px;
+  cursor: pointer;
+  min-height: 44px;
+  box-shadow: var(--shadow);
+  transition: transform 0.08s, box-shadow 0.08s, filter 0.15s;
+}
+.mabrouk-scope button:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+.mabrouk-scope button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+.mabrouk-scope button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mabrouk-scope button.primary {
+  background: linear-gradient(180deg, #37e0ff, #1a9ae0);
+  color: #05203a;
+}
+.mabrouk-scope button.gold {
+  background: linear-gradient(180deg, #ffe066, #ffb400);
+  color: #3a2500;
+}
+.mabrouk-scope button.danger {
+  background: linear-gradient(180deg, #ff6b81, #d4203f);
+}
+.mabrouk-scope button.on {
+  background: linear-gradient(180deg, #ff7cc0, #ea3d8f);
+  color: #3a0020;
+}
+.mabrouk-scope button.ghost {
+  background: transparent;
+  box-shadow: none;
+  border-color: var(--line);
+}
+.mabrouk-scope button.big {
+  width: 100%;
+  min-height: 54px;
+  font-size: 1.1rem;
+}
+.mabrouk-scope button.icon {
+  min-height: 42px;
+  min-width: 42px;
+  padding: 4px 10px;
+  font-size: 1.15rem;
+}
+.mabrouk-scope button.tiny {
+  min-height: 26px;
+  min-width: 26px;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  margin-left: auto;
+  box-shadow: 0 2px 0 var(--ink);
+  border-width: 2px;
+}
+.mabrouk-scope input.text {
+  box-sizing: border-box;
+  width: 100%;
+  background: #120b3a;
+  border: 3px solid var(--line);
+  border-radius: 14px;
+  padding: 11px 14px;
+  color: var(--text);
+  font: inherit;
+  font-weight: 500;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.mabrouk-scope input.text:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.mabrouk-scope input.code {
+  text-align: center;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+}
+.mabrouk-scope input[type='range'] {
+  width: 100%;
+  accent-color: var(--pink);
+}
+.mabrouk-scope input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--pink);
+}
+.mabrouk-scope .muted {
+  color: var(--muted);
+}
+.mabrouk-scope .good {
+  color: var(--good);
+}
+.mabrouk-scope .bad {
+  color: var(--bad);
+}
+.mabrouk-scope .center {
+  text-align: center;
+}
+.mabrouk-scope .row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.mabrouk-scope /* ------------------------------------------------------------- Avatars */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #241a70;
+  border: 3px solid var(--ring, #7c9cff);
+  box-shadow: 0 0 0 2px var(--ink), 0 3px 0 2px var(--ink);
+}
+
+.mabrouk-scope /* ------------------------------------------------------------- Vignettes (popover) */
+.pop-wrap {
+  position: relative;
+}
+.mabrouk-scope .popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 10px);
+  width: 250px;
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 0 6px 0 var(--ink), 0 12px 30px #000a;
+  padding: 12px 14px;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: pop 0.18s ease;
+  text-align: left;
+}
+.mabrouk-scope .popover.wide {
+  width: min(400px, 92vw);
+  max-height: 70vh;
+  overflow: auto;
+}
+.mabrouk-scope .popover h4 {
+  margin: 0;
+  color: var(--gold);
+  font-size: 1.05rem;
+}
+.mabrouk-scope .pop-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.mabrouk-scope .pop-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+.mabrouk-scope .rules {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+.mabrouk-scope .rules b {
+  color: var(--accent);
+}
+.mabrouk-scope .emote-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.mabrouk-scope .emote-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.mabrouk-scope .emote-pick {
+  min-height: 56px;
+  padding: 3px;
+  overflow: hidden;
+  border-radius: 12px;
+}
+.mabrouk-scope .emote-pick .emote-img {
+  border-radius: 8px;
+}
+.mabrouk-scope /* Bouton flottant (FAB) : rond, colle l'image de l'astronaute de garde */
+button.fab-trigger {
+  border-radius: 999px;
+  padding: 3px;
+  overflow: hidden;
+  box-shadow: 0 4px 0 var(--ink), 0 0 14px #38e1ff66;
+}
+.mabrouk-scope button.fab-trigger .emote-img {
+  border-radius: 999px;
+}
+.mabrouk-scope /* La vignette d'emotes s'ouvre vers le haut : le bouton est en bas du tapis */
+.popover.emotes-pop {
+  top: auto;
+  bottom: calc(100% + 10px);
+}
+
+.mabrouk-scope /* Bulle flottante d'un emote envoyé, ancrée au-dessus de l'avatar du joueur */
+.emote-bubble {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  width: 44px;
+  height: 38px;
+  background: var(--panel);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 0 var(--ink);
+  pointer-events: none;
+  z-index: 60;
+  animation: emotePop 1.9s ease forwards;
+}
+@keyframes emotePop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(6px) scale(0.6);
+  }
+  14% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1.1);
+  }
+  24% {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  82% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-10px) scale(0.92);
+  }
+}
+
+.mabrouk-scope /* ------------------------------------------------------------- Accueil / salon */
+.home,
+.mabrouk-scope .lobby {
+  max-width: 470px;
+  margin: 0 auto;
+  padding: max(14px, env(safe-area-inset-top)) 16px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 100%;
+}
+.mabrouk-scope .home-top {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.mabrouk-scope h1 {
+  margin: 0;
+  text-align: center;
+  font-size: 3rem;
+  letter-spacing: 0.06em;
+  color: var(--gold);
+  -webkit-text-stroke: 2px var(--ink);
+  paint-order: stroke fill;
+  text-shadow: 0 4px 0 var(--ink), 0 0 26px #ffd23f66;
+}
+.mabrouk-scope .logo {
+  display: inline-block;
+  animation: floaty 3s ease-in-out infinite;
+}
+.mabrouk-scope .tagline {
+  text-align: center;
+  margin: -6px 0 4px;
+  font-weight: 500;
+  color: #d9d2ff;
+  font-size: 1.05rem;
+}
+.mabrouk-scope h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  color: var(--accent);
+  font-weight: 600;
+}
+.mabrouk-scope .card-panel {
+  background: linear-gradient(180deg, #251c6b, #1b1454);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  box-shadow: 0 5px 0 var(--ink), 0 10px 26px #0008;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.mabrouk-scope .tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.mabrouk-scope .field {
+  display: block;
+  font-size: 0.95rem;
+}
+.mabrouk-scope .field input {
+  display: block;
+  margin-top: 6px;
+}
+.mabrouk-scope .or {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.mabrouk-scope .preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--c) 22%, #1a1250);
+  border: 3px solid var(--ink);
+  box-shadow: inset 0 0 0 2px var(--c);
+  font-size: 1.1rem;
+}
+.mabrouk-scope .picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.mabrouk-scope .avatars {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+}
+.mabrouk-scope .av-btn {
+  padding: 4px;
+  min-height: 0;
+  border-radius: 50%;
+  background: transparent;
+  border: 3px solid transparent;
+  box-shadow: none;
+  display: flex;
+  justify-content: center;
+}
+.mabrouk-scope .av-btn .avatar {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1;
+}
+.mabrouk-scope .av-btn.sel {
+  border-color: var(--gold);
+  background: #ffd23f22;
+}
+.mabrouk-scope .colors {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.mabrouk-scope .col-btn {
+  width: 34px;
+  height: 34px;
+  min-height: 34px;
+  border-radius: 50%;
+  padding: 0;
+  box-shadow: 0 3px 0 var(--ink);
+}
+.mabrouk-scope .col-btn.sel {
+  border-color: #fff;
+}
+.mabrouk-scope .code-big {
+  font-size: 2.4rem;
+  letter-spacing: 0.35em;
+  font-weight: 700;
+  padding: 10px 6px 10px 20px;
+  background: #120b3a;
+  color: var(--gold);
+}
+.mabrouk-scope .seats {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mabrouk-scope .seats li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--c) 18%, #1a1250);
+  border: 3px solid var(--ink);
+  box-shadow: inset 4px 0 0 var(--c);
+}
+.mabrouk-scope .seats li.me {
+  outline: 2px solid var(--accent);
+}
+.mabrouk-scope .tag {
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--muted);
+}
+.mabrouk-scope .tag.off,
+.mabrouk-scope .off {
+  color: var(--bad);
+}
+
+.mabrouk-scope /* ------------------------------------------------------------- Jeu (base : mobile) */
+.game {
+  box-sizing: border-box;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: env(safe-area-inset-top) 8px calc(6px + env(safe-area-inset-bottom));
+  gap: 6px;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.mabrouk-scope .stage {
+  display: contents;
+}
+.mabrouk-scope .rim {
+  display: none;
+}
+.mabrouk-scope .topbar,
+.mabrouk-scope .banner,
+.mabrouk-scope .actions,
+.mabrouk-scope .ranking {
+  flex: 0 0 auto;
+}
+.mabrouk-scope .topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 4px 0;
+  position: relative;
+  z-index: 40;
+}
+.mabrouk-scope .topbar .round {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--gold);
+  text-shadow: 0 2px 0 var(--ink);
+}
+.mabrouk-scope .top-actions {
+  display: flex;
+  gap: 6px;
+}
+.mabrouk-scope .ranking {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 3px 3px 6px;
+  scrollbar-width: none;
+}
+.mabrouk-scope .ranking::-webkit-scrollbar {
+  display: none;
+}
+.mabrouk-scope .chip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px 3px 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c) 22%, #1a1250);
+  border: 3px solid var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+.mabrouk-scope .chip.me {
+  box-shadow: 0 3px 0 var(--ink), 0 0 0 2px var(--accent);
+}
+.mabrouk-scope .chip.turn {
+  box-shadow: 0 3px 0 var(--ink), 0 0 0 2px var(--c), 0 0 14px var(--c);
+}
+.mabrouk-scope .chip .nm {
+  max-width: 84px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mabrouk-scope .banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  text-align: center;
+  border: 3px solid var(--ink);
+}
+.mabrouk-scope .banner button {
+  min-height: 30px;
+  padding: 2px 10px;
+  border-width: 2px;
+}
+.mabrouk-scope .banner.kick {
+  background: #4a1230;
+}
+.mabrouk-scope .banner.lap {
+  background: #4a3a06;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.mabrouk-scope .opponents {
+  display: grid;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+.mabrouk-scope .opponents.cols-1 {
+  grid-template-columns: minmax(0, 210px);
+  justify-content: center;
+}
+.mabrouk-scope .opponents.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+.mabrouk-scope .opponents.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.mabrouk-scope .opp {
+  background: color-mix(in srgb, var(--c) 14%, #1a1250);
+  border: 3px solid var(--ink);
+  box-shadow: 0 4px 0 var(--ink), inset 0 0 0 2px color-mix(in srgb, var(--c) 55%, transparent);
+  border-radius: 16px;
+  padding: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  transition: box-shadow 0.3s, transform 0.3s;
+}
+.mabrouk-scope /* Légère surbrillance du joueur dont c'est le tour */
+.opp.active {
+  box-shadow: 0 4px 0 var(--ink), inset 0 0 0 2px var(--c), 0 0 0 3px color-mix(in srgb, var(--c) 70%, transparent),
+    0 0 22px color-mix(in srgb, var(--c) 55%, transparent);
+  animation: glowSeat 2.2s ease-in-out infinite;
+}
+.mabrouk-scope .opp.removed {
+  opacity: 0.4;
+}
+.mabrouk-scope .opp-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.82rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+.mabrouk-scope .opp-head .avatar {
+  border-width: 2px;
+}
+.mabrouk-scope .opp-head .nm {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 76px;
+}
+.mabrouk-scope .opp-foot {
+  font-size: 0.72rem;
+  text-align: center;
+}
+.mabrouk-scope .turn-badge,
+.mabrouk-scope .mb,
+.mabrouk-scope .rdy {
+  font-size: 0.62rem;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #05203a;
+  font-weight: 700;
+  border: 2px solid var(--ink);
+}
+.mabrouk-scope .mb {
+  background: var(--gold);
+}
+.mabrouk-scope .rdy {
+  background: var(--good);
+}
+.mabrouk-scope .excluded {
+  text-align: center;
+  padding: 24px 0;
+  color: var(--bad);
+}
+
+.mabrouk-scope .table {
+  flex: 1 0 auto;
+  min-height: 0;
+  background:
+    radial-gradient(1.5px 1.5px at 20% 30%, #fff9, transparent),
+    radial-gradient(1.5px 1.5px at 75% 65%, #fff9, transparent),
+    radial-gradient(120% 100% at 50% 40%, #2a8fb0 0%, #1d5ea8 45%, #1b2f86 100%);
+  border: 3px solid var(--ink);
+  box-shadow: 0 5px 0 var(--ink), inset 0 0 40px #0006;
+  border-radius: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px;
+}
+.mabrouk-scope .piles {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 16px;
+}
+.mabrouk-scope .pile,
+.mabrouk-scope .held-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.mabrouk-scope .pile label,
+.mabrouk-scope .held label {
+  font-size: 0.7rem;
+  color: #d5efff;
+  font-weight: 500;
+}
+.mabrouk-scope .stack {
+  position: relative;
+  width: clamp(44px, 12vw, 66px);
+}
+.mabrouk-scope .stack .count {
+  position: absolute;
+  right: -8px;
+  bottom: -8px;
+  background: var(--ink);
+  color: var(--gold);
+  border-radius: 999px;
+  font-size: 0.7rem;
+  padding: 1px 7px;
+  font-weight: 700;
+  z-index: 1;
+}
+.mabrouk-scope /* Cartes d'ombre pour donner un effet de petite pile (2-3 cartes) sous la carte du dessus */
+.stack .shadow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.mabrouk-scope .stack .shadow-1 {
+  transform: translate(-4px, -4px) rotate(-3deg);
+  filter: brightness(0.78);
+}
+.mabrouk-scope .stack .shadow-2 {
+  transform: translate(-8px, -8px) rotate(-6deg);
+  filter: brightness(0.6);
+}
+.mabrouk-scope /* Zone de dépôt de la défausse rapide : large et lumineuse quand une carte la survole */
+.stack.drop {
+  border-radius: 10px;
+}
+.mabrouk-scope .stack.drop::before {
+  content: '';
+  position: absolute;
+  inset: -16px;
+  border-radius: 20px;
+  border: 3px dashed transparent;
+  transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+.mabrouk-scope .stack.drop.hot::before {
+  border-color: var(--gold);
+  background: #ffd23f26;
+  box-shadow: 0 0 26px #ffd23fbb;
+}
+.mabrouk-scope .stack.drop.hot .card {
+  transform: scale(1.08);
+}
+.mabrouk-scope .held-zone {
+  width: clamp(44px, 12vw, 66px);
+}
+.mabrouk-scope .held {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.mabrouk-scope .held-empty {
+  height: 1px;
+}
+.mabrouk-scope .hint {
+  font-size: 0.9rem;
+  text-align: center;
+  color: #e3f4ff;
+  min-height: 2.4em;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  text-shadow: 0 2px 0 #0a0a3a;
+  max-width: 420px;
+}
+.mabrouk-scope .hint.mine {
+  color: #fff;
+  font-weight: 600;
+  animation: pulseText 1.6s ease-in-out infinite;
+}
+.mabrouk-scope .ticker {
+  font-size: 0.74rem;
+  color: #bfe6ff;
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mabrouk-scope .me-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+.mabrouk-scope .nameplate {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  padding: 2px 12px 2px 4px;
+  border-radius: 999px;
+  border: 3px solid transparent;
+}
+.mabrouk-scope .nameplate.active {
+  background: color-mix(in srgb, var(--c) 22%, #1a1250);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px var(--c), 0 0 16px color-mix(in srgb, var(--c) 60%, transparent);
+}
+.mabrouk-scope /* La taille du tapis (auparavant sur .me-zone .mat) vit ici : .mat-wrap est le child
+   direct (largeur définie, sans cycle de résolution des %) et .mat passe simplement à 100 %.
+   Le bouton d'emotes est ancré hors de cette boîte, à droite en bas, pour ne jamais chevaucher une carte. */
+.mat-wrap {
+  position: relative;
+  width: min(100%, 340px, 38dvh);
+}
+.mabrouk-scope .emote-fab-wrap {
+  position: absolute;
+  left: 100%;
+  bottom: 0;
+  margin-left: 8px;
+  z-index: 30;
+}
+.mabrouk-scope .me-zone.active .mat {
+  box-shadow: inset 0 0 22px #0007, 0 0 0 3px color-mix(in srgb, var(--c) 70%, transparent), 0 0 24px color-mix(in srgb, var(--c) 55%, transparent);
+}
+.mabrouk-scope .actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.mabrouk-scope .actions button {
+  flex: 1 1 auto;
+  min-width: 96px;
+}
+.mabrouk-scope .actions .quick {
+  flex: 0 0 auto;
+}
+
+.mabrouk-scope /* ------------------------------------------------------------- Tapis et cartes */
+.mat {
+  box-sizing: border-box;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  container-type: inline-size;
+  background:
+    radial-gradient(1.5px 1.5px at 15% 20%, #fff7, transparent),
+    radial-gradient(1.5px 1.5px at 80% 75%, #fff7, transparent),
+    radial-gradient(circle at 50% 50%, #2a1f7a, #170f4e);
+  border: 3px dashed color-mix(in srgb, var(--mat) 80%, #fff 0%);
+  border-radius: 16px;
+  box-shadow: inset 0 0 22px #0007;
+  transition: box-shadow 0.3s;
+}
+.mabrouk-scope .mat.small {
+  border-width: 2px;
+  border-radius: 12px;
+}
+.mabrouk-scope .slot {
+  position: absolute;
+  width: 29%;
+  transform: translate(-50%, -50%);
+  transition: left 0.4s cubic-bezier(0.3, 0.9, 0.3, 1), top 0.4s cubic-bezier(0.3, 0.9, 0.3, 1), opacity 0.15s;
+  touch-action: none;
+  z-index: 1;
+}
+.mabrouk-scope .slot.movable {
+  cursor: grab;
+}
+.mabrouk-scope .slot.lifted {
+  opacity: 0.25;
+}
+.mabrouk-scope /* Dépose : la carte reste exactement là où on la lâche, puis se pose en douceur */
+.slot.settle {
+  transition: none;
+}
+.mabrouk-scope .slot.settle .card {
+  animation: settle 0.15s ease-out both;
+}
+/* Fondu pur, sans rotation ni mise à l'échelle : la carte apparaît exactement là où elle est
+   lâchée, sans aucun mouvement susceptible de paraître saccadé. */
+@keyframes settle {
+  from {
+    opacity: 0.35;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.mabrouk-scope .slot.tappable {
+  cursor: pointer;
+}
+.mabrouk-scope .slot.tappable .card {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+  animation: glow 1.2s ease-in-out infinite;
+}
+.mabrouk-scope .slot.selected .card {
+  outline: 4px solid var(--gold);
+  box-shadow: 0 0 16px var(--gold);
+}
+.mabrouk-scope .slot.penalty {
+  z-index: 20;
+}
+/* Carte suivant le doigt / la souris pendant un glisser. Rendue via createPortal directement
+   dans <body> (voir Cards.tsx) — donc HORS de .mabrouk-scope : ce sélecteur doit rester global,
+   sinon il ne matche jamais rien. Nommé ".drag-ghost" (pas ".ghost") pour ne jamais entrer en
+   collision avec une classe générique comme .p-btn.ghost de la plateforme. */
+.drag-ghost {
+  position: fixed;
+  transform: translate(-50%, -50%) scale(1.06);
+  z-index: 2000;
+  pointer-events: none;
+  filter: drop-shadow(0 12px 10px #000a);
+  transition: transform 0.1s ease;
+}
+/* Les règles ".card" (et variantes ci-dessous) sont volontairement GLOBALES, non scopées sous
+   .mabrouk-scope : <Card> peut être rendue hors de cette zone via le portail de glisser-déposer
+   (.ghost, voir Cards.tsx), et doit rester identique dans les deux cas. */
+.card {
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  border-radius: 9%/6.5%;
+  position: relative;
+  border: 3px solid var(--ink);
+  box-shadow: 0 3px 0 var(--ink), 0 5px 8px #0007;
+  transition: transform 0.15s;
+  container-type: inline-size;
+  overflow: hidden;
+}
+/* Dos de carte : planète cartoon annelée sur ciel étoilé */
+.card.back {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 140'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237a45ff'/%3E%3Cstop offset='1' stop-color='%231d1470'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='140' fill='url(%23g)'/%3E%3Crect x='6' y='6' width='88' height='128' rx='8' fill='none' stroke='%23ffffff55' stroke-width='2' stroke-dasharray='5 4'/%3E%3Cg fill='%23fff'%3E%3Ccircle cx='16' cy='20' r='1.8'/%3E%3Ccircle cx='82' cy='28' r='1.3'/%3E%3Ccircle cx='24' cy='118' r='1.5'/%3E%3Ccircle cx='86' cy='114' r='2'/%3E%3Ccircle cx='68' cy='16' r='1'/%3E%3Ccircle cx='12' cy='72' r='1.1'/%3E%3Ccircle cx='90' cy='74' r='1.2'/%3E%3Ccircle cx='40' cy='128' r='1'/%3E%3C/g%3E%3Cellipse cx='50' cy='70' rx='40' ry='9' fill='none' stroke='%23ffd23f' stroke-width='5' transform='rotate(-22 50 70)'/%3E%3Ccircle cx='50' cy='70' r='20' fill='%23ff5fa8' stroke='%23120b3a' stroke-width='3'/%3E%3Cpath d='M34 62 Q50 54 66 63' stroke='%23ffc2de' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='58' cy='78' r='4' fill='%23e03d8e'/%3E%3Cpath d='M10 70 A40 9 0 0 0 90 70' fill='none' stroke='%23ffd23f' stroke-width='5' transform='rotate(-22 50 70)'/%3E%3Cpath d='M50 22 l3 7 7 1 -5 5 1 7 -6 -4 -6 4 1 -7 -5 -5 7 -1z' fill='%2338e1ff' stroke='%23120b3a' stroke-width='1.2' transform='translate(0 -2) scale(.9) translate(6 2)'/%3E%3C/svg%3E")
+      center / cover no-repeat;
+}
+.card.face {
+  background: linear-gradient(160deg, #fffbe8, #f6e9c2);
+  animation: flip 0.45s ease both;
+}
+/* Fantôme de glisser-déposer (voir Cards.tsx) : la carte est déjà visible, ce n'est pas une
+   révélation, donc pas d'animation de retournement à l'entrée. */
+.card.face.no-flip {
+  animation: none;
+}
+.card.face .corner {
+  position: absolute;
+  top: 4%;
+  left: 9%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: 700;
+  font-size: 32cqw;
+  line-height: 0.95;
+}
+.card.face .corner small {
+  font-size: 24cqw;
+  line-height: 1;
+}
+.card.face .pip {
+  position: absolute;
+  right: 8%;
+  bottom: 5%;
+  font-size: 54cqw;
+  line-height: 1;
+}
+.red-suit {
+  color: #e5364b;
+}
+.black-suit {
+  color: var(--ink);
+}
+.card.empty {
+  border: 3px dashed #6a5cd8;
+  background: transparent;
+  box-shadow: none;
+}
+.card.lift {
+  animation: lift 0.4s ease both;
+}
+.card.dim {
+  filter: saturate(0.6) brightness(0.9);
+}
+.card.drop-in {
+  animation: dropIn 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.card.flash {
+  outline: 4px solid #ff3b5c;
+  box-shadow: 0 0 24px #ff2b4d;
+  animation: shake 0.5s ease, redPulse 1s ease-in-out infinite;
+}
+
+.mabrouk-scope /* ------------------------------------------------------------- Overlays */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: #06031bd9;
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  z-index: 100;
+  animation: fade 0.25s ease;
+}
+.mabrouk-scope .panel {
+  position: relative;
+  background: linear-gradient(180deg, #251c6b, #1b1454);
+  border: 3px solid var(--ink);
+  box-shadow: 0 6px 0 var(--ink), 0 16px 40px #000a;
+  border-radius: 22px;
+  padding: 16px;
+  width: min(100%, 460px);
+  max-height: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: pop 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.mabrouk-scope /* Masque le popup de fin de manche pour voir la table (cartes retournées) en dessous */
+.panel-close {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+}
+.mabrouk-scope .reopen-scores {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 90;
+}
+.mabrouk-scope .panel h2 {
+  margin: 0;
+  text-align: center;
+  color: var(--gold);
+  text-shadow: 0 3px 0 var(--ink);
+}
+.mabrouk-scope .panel p {
+  margin: 0;
+  text-align: center;
+}
+.mabrouk-scope table.scores {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.mabrouk-scope .scores th {
+  color: var(--muted);
+  font-weight: 500;
+  text-align: left;
+  padding: 4px;
+}
+.mabrouk-scope .scores td {
+  padding: 5px 4px;
+  border-top: 2px solid #3a2f9a;
+}
+.mabrouk-scope .who {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mabrouk-scope .scores td.who {
+  display: table-cell;
+}
+.mabrouk-scope .scores td.who .avatar {
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.mabrouk-scope .scores tr.me td {
+  background: #38e1ff14;
+}
+.mabrouk-scope .podium {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mabrouk-scope .podium li {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  padding: 6px 10px;
+  background: #2c2382;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+}
+.mabrouk-scope .podium li.win {
+  background: #5a4306;
+  outline: 2px solid var(--gold);
+}
+.mabrouk-scope .flash-banner {
+  position: fixed;
+  left: 50%;
+  top: 34%;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, #ffe066, #ffb400);
+  color: #3a2500;
+  font-weight: 700;
+  font-size: 2rem;
+  padding: 12px 28px;
+  border-radius: 18px;
+  border: 4px solid var(--ink);
+  box-shadow: 0 6px 0 var(--ink);
+  z-index: 200;
+  pointer-events: none;
+  animation: banner 1.8s ease both;
+  white-space: nowrap;
+}
+.mabrouk-scope .log-panel {
+  position: absolute;
+  inset: 52px 8px 64px;
+  z-index: 60;
+  background: #0d0830f5;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  padding: 10px;
+  overflow: auto;
+  font-size: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.mabrouk-scope .log.bad {
+  color: var(--bad);
+}
+.mabrouk-scope .log.good {
+  color: var(--good);
+}
+.mabrouk-scope .toasts {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 84px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 600;
+  pointer-events: none;
+}
+.mabrouk-scope .toast {
+  background: var(--panel2);
+  border: 3px solid var(--ink);
+  box-shadow: 0 3px 0 var(--ink);
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  max-width: 92vw;
+  animation: pop 0.25s ease;
+}
+.mabrouk-scope .toast.error {
+  background: #7d1636;
+}
+.mabrouk-scope .offline-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 700;
+  background: #a3173d;
+  text-align: center;
+  padding: 4px;
+  font-size: 0.8rem;
+}
+
+/* ------------------------------------------------------------- Animations */
+@keyframes twinkle {
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes flip {
+  0% {
+    transform: perspective(500px) rotateY(90deg) scale(0.9);
+    opacity: 0.2;
+  }
+  100% {
+    transform: perspective(500px) rotateY(0) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes dropIn {
+  0% {
+    transform: translateY(-30px) rotate(-8deg) scale(1.15);
+    opacity: 0;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+@keyframes lift {
+  0% {
+    transform: translateY(24px) scale(0.85);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px) rotate(-3deg);
+  }
+  40% {
+    transform: translateX(6px) rotate(3deg);
+  }
+  60% {
+    transform: translateX(-4px);
+  }
+  80% {
+    transform: translateX(4px);
+  }
+}
+@keyframes redPulse {
+  50% {
+    box-shadow: 0 0 8px #ff2b4d;
+  }
+}
+@keyframes glow {
+  50% {
+    outline-color: #38e1ff44;
+    box-shadow: 0 0 12px #38e1ff88;
+  }
+}
+@keyframes glowSeat {
+  50% {
+    box-shadow: 0 4px 0 var(--ink), inset 0 0 0 2px var(--c), 0 0 0 3px color-mix(in srgb, var(--c) 40%, transparent),
+      0 0 12px color-mix(in srgb, var(--c) 30%, transparent);
+  }
+}
+@keyframes pulseText {
+  50% {
+    opacity: 0.7;
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes banner {
+  0% {
+    transform: translateX(-50%) scale(0.4);
+    opacity: 0;
+  }
+  15% {
+    transform: translateX(-50%) scale(1.1);
+    opacity: 1;
+  }
+  80% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1) translateY(-20px);
+    opacity: 0;
+  }
+}
+@keyframes floaty {
+  50% {
+    transform: translateY(-6px) rotate(6deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mabrouk-scope,
+.mabrouk-scope * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ==========================================================================
+   VERSION WEB (écran large) : plateau plein écran, sans défilement,
+   table de poker ovale avec les joueurs assis autour.
+   ========================================================================== */
+@media (min-width: 900px) and (min-height: 560px) {
+  .mabrouk-scope .game {
+    max-width: none;
+    width: 100%;
+    height: 100dvh;
+    padding: 10px 28px 20px;
+    overflow: hidden;
+    gap: 6px;
+  }
+  .mabrouk-scope /* Classement en colonne sur le côté gauche pendant la partie (au lieu du haut du plateau,
+     qui reste libre pour les sièges des adversaires du haut). */
+  .ranking {
+    position: absolute;
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    max-width: 190px;
+    overflow: visible;
+    z-index: 10;
+  }
+  .mabrouk-scope .chip {
+    width: 100%;
+  }
+  .mabrouk-scope .chip .nm {
+    max-width: 110px;
+  }
+  .mabrouk-scope .stage {
+    display: block;
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .mabrouk-scope /* La table : ovale avec bordure cartoon */
+  .rim {
+    display: block;
+    position: absolute;
+    left: 7%;
+    right: 7%;
+    top: 10%;
+    bottom: 9%;
+    border-radius: 50%;
+    background:
+      radial-gradient(2px 2px at 18% 32%, #fffb, transparent),
+      radial-gradient(2px 2px at 82% 28%, #fffb, transparent),
+      radial-gradient(1.5px 1.5px at 30% 78%, #fff9, transparent),
+      radial-gradient(1.5px 1.5px at 70% 80%, #fff9, transparent),
+      radial-gradient(1.5px 1.5px at 50% 20%, #fff9, transparent),
+      radial-gradient(ellipse at 50% 42%, #2fa0c4 0%, #1f68b4 42%, #1b2f8e 80%, #141d6a 100%);
+    border: 5px solid var(--ink);
+    box-shadow:
+      0 0 0 10px #4f3fd0,
+      0 0 0 14px var(--ink),
+      0 0 0 22px #2c2382,
+      0 0 0 26px var(--ink),
+      0 26px 0 26px #0a0626aa,
+      inset 0 0 90px #0009;
+  }
+  .mabrouk-scope .rim::after {
+    content: 'MABROUK';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: 700;
+    font-size: clamp(2rem, 7vw, 6rem);
+    letter-spacing: 0.12em;
+    color: #ffffff10;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .mabrouk-scope /* Joueurs autour de la table */
+  .opponents {
+    display: contents;
+  }
+  .mabrouk-scope .opp {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    transform: translate(-50%, -50%);
+    width: clamp(108px, 15vh, 160px);
+    z-index: 3;
+  }
+  .mabrouk-scope .opp .mat {
+    max-width: none;
+  }
+  .mabrouk-scope .table {
+    position: absolute;
+    left: 50%;
+    top: 21%;
+    /* Réservé sous la table : hauteur du tapis (.mat-wrap, carré) + nameplate + marge, pour
+       ne jamais chevaucher .me-zone qui est ancré en bas de .stage (voir plus bas, même formule
+       que .mat-wrap ci-dessous). */
+    bottom: calc(clamp(230px, 38vh, 400px) + 88px);
+    transform: translateX(-50%);
+    flex: none;
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    width: min(46%, 520px);
+    z-index: 2;
+  }
+  .mabrouk-scope .stack,
+.mabrouk-scope .held-zone {
+    width: clamp(54px, 9vh, 84px);
+  }
+  .mabrouk-scope .hint {
+    font-size: 1rem;
+    max-width: 460px;
+  }
+  .mabrouk-scope .me-zone {
+    position: absolute;
+    left: 50%;
+    bottom: -4px;
+    transform: translateX(-50%);
+    z-index: 4;
+  }
+  .mabrouk-scope .mat-wrap {
+    width: clamp(230px, 38vh, 400px);
+  }
+  .mabrouk-scope .actions {
+    padding-top: 2px;
+  }
+  .mabrouk-scope .actions button {
+    flex: 0 1 auto;
+    min-width: 150px;
+  }
+  .mabrouk-scope .log-panel {
+    inset: 56px 22px 70px auto;
+    width: 360px;
+  }
+}

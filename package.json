@@ -1,0 +1,24 @@
+{
+  "name": "mabrouk",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Mabrouk (Dutch / Tamoul) - jeu de cartes web, moteur autoritaire, solo + multijoueur",
+  "workspaces": [
+    "packages/*",
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p packages/core --noEmit && tsc -p server --noEmit && tsc -p client --noEmit",
+    "dev:server": "npm run dev -w server",
+    "dev:client": "npm run dev -w client",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5"
+  }
+}
