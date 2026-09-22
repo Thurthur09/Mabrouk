@@ -179,9 +179,9 @@ export interface FlightSpec {
  * Toujours affichée dos visible (jamais la face) : la carte reste secrète pendant tout le vol, quel
  * que soit l'échange (avec la pioche tenue, la défausse, ou entre deux joueurs) — voir Game.tsx.
  */
-export function FlyingCard({ from, to, duration = 0.75 }: { from: DOMRect; to: DOMRect; duration?: number }) {
+export function FlyingCard({ from, to, duration = 1 }: { from: DOMRect; to: DOMRect; duration?: number }) {
   const dist = Math.hypot(to.left - from.left, to.top - from.top);
-  const lift = Math.max(90, Math.min(200, dist * 0.3));
+  const lift = Math.max(70, Math.min(160, dist * 0.22));
   const style = {
     '--x0': `${from.left}px`,
     '--y0': `${from.top}px`,

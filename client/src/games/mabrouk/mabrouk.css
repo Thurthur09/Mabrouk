@@ -270,10 +270,18 @@
 .mabrouk-scope .emote-pick .emote-img {
   border-radius: 8px;
 }
-.mabrouk-scope /* Bouton flottant (FAB) : rond, colle l'image de l'astronaute de garde */
+.mabrouk-scope /* Bouton flottant (FAB) : rond, colle l'image de l'astronaute de garde. Taille fixe
+   (au lieu de min-width/min-height) pour garantir un cercle parfait avec l'icône bien centrée. */
 button.fab-trigger {
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  min-height: 58px;
   border-radius: 999px;
-  padding: 3px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   box-shadow: 0 4px 0 var(--ink), 0 0 14px #38e1ff66;
 }
@@ -286,12 +294,15 @@ button.fab-trigger {
   bottom: calc(100% + 10px);
 }
 
-.mabrouk-scope /* Bulle flottante d'un emote envoyé, ancrée au-dessus de l'avatar du joueur */
+.mabrouk-scope /* Bulle flottante d'un emote envoyé : positionnée du côté du tapis qui fait face au
+   centre de la table (voir emoteVert/emoteHoriz dans Game.tsx), pour toujours rester visible et
+   "regarder" vers le centre plutôt que de sortir de l'écran ou tourner le dos aux autres joueurs. */
 .emote-bubble {
+  --tx: -50%;
   position: absolute;
   left: 50%;
   bottom: 100%;
-  transform: translateX(-50%);
+  transform: translateX(var(--tx));
   margin-bottom: 8px;
   width: 44px;
   height: 38px;
@@ -304,33 +315,39 @@ button.fab-trigger {
   z-index: 60;
   animation: emotePop 1.9s ease forwards;
 }
-.mabrouk-scope /* Les joueurs assis tout en haut de la table (web) n'ont pas de place au-dessus d'eux :
-   la bulle s'affiche alors en dessous de l'avatar pour ne jamais sortir de l'écran. */
+.mabrouk-scope /* Joueur assis dans la moitié haute de la table : le centre est en dessous de lui,
+   la bulle s'affiche donc sous l'avatar (jamais au-dessus, où elle sortirait de l'écran). */
 .emote-bubble.below {
   bottom: auto;
   top: 100%;
   margin-bottom: 0;
   margin-top: 8px;
 }
+.mabrouk-scope .emote-bubble.h-left {
+  --tx: -85%;
+}
+.mabrouk-scope .emote-bubble.h-right {
+  --tx: -15%;
+}
 @keyframes emotePop {
   0% {
     opacity: 0;
-    transform: translateX(-50%) translateY(6px) scale(0.6);
+    transform: translateX(var(--tx)) translateY(6px) scale(0.6);
   }
   14% {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1.1);
+    transform: translateX(var(--tx)) translateY(0) scale(1.1);
   }
   24% {
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateX(var(--tx)) translateY(0) scale(1);
   }
   82% {
     opacity: 1;
-    transform: translateX(-50%) translateY(0) scale(1);
+    transform: translateX(var(--tx)) translateY(0) scale(1);
   }
   100% {
     opacity: 0;
-    transform: translateX(-50%) translateY(-10px) scale(0.92);
+    transform: translateX(var(--tx)) translateY(-10px) scale(0.92);
   }
 }
 
@@ -979,7 +996,7 @@ button.fab-trigger {
   width: var(--w0);
   height: var(--h0);
   animation-name: flyArc;
-  animation-timing-function: cubic-bezier(0.3, 0.1, 0.2, 1);
+  animation-timing-function: ease-in-out;
   animation-fill-mode: forwards;
 }
 @keyframes flyArc {
@@ -1483,11 +1500,11 @@ button.fab-trigger {
   .mabrouk-scope .table {
     position: absolute;
     left: 50%;
-    top: 27%;
+    top: 32%;
     /* Réservé sous la table : hauteur du tapis (.mat-wrap, désormais plus large que haut) + nameplate
        + marge, pour ne jamais chevaucher .me-zone qui est ancré en bas de .stage (voir la même
-       proportion sur .mat-wrap ci-dessous : largeur / 1.9 ≈ hauteur réelle du tapis). */
-    bottom: calc(clamp(170px, 24vh, 300px) + 88px);
+       proportion sur .mat-wrap ci-dessous : largeur / 1.75 ≈ hauteur réelle du tapis). */
+    bottom: calc(clamp(140px, 20vh, 250px) + 84px);
     transform: translateX(-50%);
     flex: none;
     background: none;
@@ -1516,10 +1533,10 @@ button.fab-trigger {
      table ovale : mêmes positions de cartes en %, mais étalées horizontalement et resserrées
      verticalement. Cartes réduites (.me-zone .slot) pour ne pas se chevaucher malgré la hauteur réduite. */
   .mat-wrap {
-    width: clamp(300px, 46vh, 520px);
+    width: clamp(320px, 50vh, 560px);
   }
   .mabrouk-scope .me-zone .mat {
-    aspect-ratio: 1.55 / 1;
+    aspect-ratio: 1.75 / 1;
   }
   .mabrouk-scope .me-zone .slot {
     width: 21%;

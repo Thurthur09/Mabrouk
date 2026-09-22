@@ -10,28 +10,28 @@ const medal = (r: number) => (r === 1 ? '🥇' : r === 2 ? '🥈' : r === 3 ? '�
 
 /** Places des adversaires autour de la table (version web), en % de la scène : [x, y] du centre. */
 const SEATS: Record<number, [number, number][]> = {
-  1: [[50, 12]],
+  1: [[50, 15]],
   2: [
-    [27, 15],
-    [73, 15],
+    [27, 17],
+    [73, 17],
   ],
   3: [
     [12, 47],
-    [50, 10],
+    [50, 13],
     [88, 47],
   ],
   4: [
-    [11, 54],
-    [34, 13],
-    [66, 13],
-    [89, 54],
+    [17, 56],
+    [34, 16],
+    [66, 16],
+    [83, 56],
   ],
   5: [
-    [9, 58],
-    [22, 20],
-    [50, 9],
-    [78, 20],
-    [91, 58],
+    [17, 60],
+    [24, 24],
+    [50, 12],
+    [76, 24],
+    [83, 60],
   ],
 };
 
@@ -90,7 +90,7 @@ export function Game({ room }: { room: RoomView }) {
   const flashId = useRef(0);
   const [bubbles, setBubbles] = useState<Record<string, { id: number; emote: string }>>({});
   const bubbleId = useRef(0);
-  const FLIGHT_MS = 750;
+  const FLIGHT_MS = 1000;
   const [flights, setFlights] = useState<{ id: number; from: DOMRect; to: DOMRect }[]>([]);
   const flightId = useRef(0);
   // Cartes "en vol" à ne pas encore afficher côté données : sans ça, la nouvelle carte apparaîtrait
@@ -515,8 +515,12 @@ function OpponentMat({
 }) {
   const active = view.currentPlayer === p.id;
   const removed = p.status === 'removed';
-  // Trop près du haut de l'écran (table en vue web) pour laisser la place à une bulle au-dessus : on l'affiche en dessous.
-  const bubbleBelow = seat[1] < 15;
+  // L'emote pointe toujours vers le centre de la table : côté vertical/horizontal opposé à la
+  // position du siège par rapport au centre (50,50), pour ne jamais sortir de l'écran ni tourner
+  // le dos aux autres joueurs (ex. joueur en bas à droite -> bulle en haut à gauche de son tapis).
+  const emoteVert = seat[1] < 50 ? 'below' : 'above';
+  const dx = seat[0] - 50;
+  const emoteHoriz = dx < -12 ? 'right' : dx > 12 ? 'left' : 'center';
   return (
     <div
       className={`opp ${active ? 'active' : ''} ${removed ? 'removed' : ''}`}
@@ -524,7 +528,7 @@ function OpponentMat({
     >
       <div className="opp-head">
         {bubble && (
-          <span className={`emote-bubble ${bubbleBelow ? 'below' : ''}`}>
+          <span className={`emote-bubble ${emoteVert === 'below' ? 'below' : ''} h-${emoteHoriz}`}>
             <EmoteImg id={bubble} />
           </span>
         )}
