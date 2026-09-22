@@ -948,35 +948,6 @@ button.fab-trigger {
 .mabrouk-scope .slot.penalty {
   z-index: 20;
 }
-.mabrouk-scope /* Anneau bref sur l'emplacement d'une carte qui vient d'être échangée (pioche/tapis/adversaire) :
-   sans lui, deux cartes cachées identiques visuellement ne montrent aucun changement à l'écran. */
-.slot.swap-fx {
-  z-index: 25;
-}
-.mabrouk-scope .slot.swap-fx::after {
-  content: '';
-  position: absolute;
-  inset: -8%;
-  border-radius: 14%/10%;
-  border: 3px solid var(--accent);
-  box-shadow: 0 0 18px var(--accent);
-  pointer-events: none;
-  animation: swapRing 0.7s ease-out both;
-}
-@keyframes swapRing {
-  0% {
-    opacity: 0;
-    transform: scale(0.7);
-  }
-  30% {
-    opacity: 1;
-    transform: scale(1.15);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.3);
-  }
-}
 /* Carte suivant le doigt / la souris pendant un glisser. Rendue via createPortal directement
    dans <body> (voir Cards.tsx) — donc HORS de .mabrouk-scope : ce sélecteur doit rester global,
    sinon il ne matche jamais rien. Nommé ".drag-ghost" (pas ".ghost") pour ne jamais entrer en
@@ -988,6 +959,46 @@ button.fab-trigger {
   pointer-events: none;
   filter: drop-shadow(0 12px 10px #000a);
   transition: transform 0.1s ease;
+}
+/* Carte volante (échange avec la pioche tenue, la défausse, ou entre deux joueurs, voir FlyingCard
+   dans Cards.tsx) : rendue en portail dans <body>, donc globale comme .drag-ghost. Décrit un arc
+   au-dessus du plateau (via --x0/--y0/.../--lift posés par React) pour bien montrer le trajet,
+   plutôt qu'un aller direct qui passerait inaperçu sous les autres éléments. */
+.fly-card {
+  position: fixed;
+  z-index: 1500;
+  pointer-events: none;
+  filter: drop-shadow(0 10px 10px #000a);
+  left: var(--x0);
+  top: var(--y0);
+  width: var(--w0);
+  height: var(--h0);
+  animation-name: flyArc;
+  animation-timing-function: cubic-bezier(0.3, 0.1, 0.2, 1);
+  animation-fill-mode: forwards;
+}
+@keyframes flyArc {
+  0% {
+    left: var(--x0);
+    top: var(--y0);
+    width: var(--w0);
+    height: var(--h0);
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    left: calc((var(--x0) + var(--x1)) / 2);
+    top: calc((var(--y0) + var(--y1)) / 2 - var(--lift));
+    width: calc((var(--w0) + var(--w1)) / 2);
+    height: calc((var(--h0) + var(--h1)) / 2);
+    transform: rotate(-8deg) scale(1.15);
+  }
+  100% {
+    left: var(--x1);
+    top: var(--y1);
+    width: var(--w1);
+    height: var(--h1);
+    transform: rotate(0deg) scale(1);
+  }
 }
 /* Les règles ".card" (et variantes ci-dessous) sont volontairement GLOBALES, non scopées sous
    .mabrouk-scope : <Card> peut être rendue hors de cette zone via le portail de glisser-déposer
@@ -1360,7 +1371,9 @@ button.fab-trigger {
 
 @media (prefers-reduced-motion: reduce) {
   .mabrouk-scope,
-.mabrouk-scope * {
+.mabrouk-scope *,
+  .drag-ghost,
+  .fly-card {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

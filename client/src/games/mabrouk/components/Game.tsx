@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { GameEvent, GameView, PlayerGameView, RoomView } from '@mabrouk/core';
+import type { FaceView, GameEvent, GameView, PlayerGameView, RoomView } from '@mabrouk/core';
 import { api, onEmotes, onGameEvents, useClient } from '../lib/store';
 import { play } from '../lib/sound';
-import { Card, Mat } from './Cards';
+import { Card, FlyingCard, Mat } from './Cards';
 import { RoundEnd } from './RoundEnd';
 import { Avatar, EmoteButton, EmoteImg, RulesButton, SoundButton } from './Widgets';
 
@@ -90,25 +90,26 @@ export function Game({ room }: { room: RoomView }) {
   const flashId = useRef(0);
   const [bubbles, setBubbles] = useState<Record<string, { id: number; emote: string }>>({});
   const bubbleId = useRef(0);
-  const [swapFx, setSwapFx] = useState<Record<string, number>>({});
-  const swapFxId = useRef(0);
+  const FLIGHT_MS = 1400;
+  const [flights, setFlights] = useState<{ id: number; face: FaceView | null; from: DOMRect; to: DOMRect }[]>([]);
+  const flightId = useRef(0);
+  // Toujours à jour (contrairement à `view` capturée par la fermeture de l'effet ci-dessous, qui ne se
+  // recrée que lorsque view.me/players.length changent) : nécessaire pour lire view.held au bon moment.
+  const viewRef = useRef(view);
+  viewRef.current = view;
 
-  const flashSwap = (ids: string[]) => {
-    const id = ++swapFxId.current;
-    setSwapFx((s) => {
-      const next = { ...s };
-      for (const cid of ids) next[cid] = id;
-      return next;
-    });
-    setTimeout(() => {
-      setSwapFx((s) => {
-        const next = { ...s };
-        for (const cid of ids) if (next[cid] === id) delete next[cid];
-        return next;
-      });
-    }, 700);
+  /** Anime une carte volant en arc au-dessus du plateau, d'un élément [data-card-id] à un autre :
+   * échange avec la pioche tenue, avec la défausse, ou entre deux joueurs (échange à l'aveugle). */
+  const flyCard = (face: FaceView | null, fromId: string, toId: string) => {
+    const fromEl = document.querySelector(`[data-card-id="${fromId}"]`);
+    const toEl = document.querySelector(`[data-card-id="${toId}"]`);
+    if (!fromEl || !toEl) return;
+    const id = ++flightId.current;
+    const from = fromEl.getBoundingClientRect();
+    const to = toEl.getBoundingClientRect();
+    setFlights((f) => [...f, { id, face, from, to }]);
+    setTimeout(() => setFlights((f) => f.filter((x) => x.id !== id)), FLIGHT_MS);
   };
-  const swappedIds = useMemo(() => new Set(Object.keys(swapFx)), [swapFx]);
 
   useEffect(() => {
     return onEmotes((playerId, emote) => {
@@ -142,18 +143,30 @@ export function Game({ room }: { room: RoomView }) {
           case 'discardHeld':
             play('discard');
             break;
-          case 'takeDiscard':
-            flashSwap([(e.data as { takenCardId: string }).takenCardId]);
+          case 'takeDiscard': {
+            const d = e.data as { takenCardId: string; discardedCardId: string; placed: FaceView; takenFace: FaceView };
+            flyCard(d.takenFace, d.takenCardId, d.discardedCardId);
+            flyCard(d.placed, d.discardedCardId, d.takenCardId);
             play('discard');
             break;
-          case 'swapHeld':
-            flashSwap([(e.data as { placedCardId: string }).placedCardId]);
+          }
+          case 'swapHeld': {
+            const d = e.data as { placedCardId: string; discardedCardId: string; discarded: FaceView };
+            const held = viewRef.current.held;
+            const heldFace = held?.cardId === d.placedCardId && held.playerId === viewRef.current.me ? held.face : null;
+            flyCard(heldFace, d.placedCardId, d.discardedCardId);
+            flyCard(d.discarded, d.discardedCardId, d.placedCardId);
             play('discard');
             break;
-          case 'swap':
-            flashSwap([(e.data as { ownCardId: string; targetCardId: string }).ownCardId, (e.data as { ownCardId: string; targetCardId: string }).targetCardId]);
+          }
+          case 'swap': {
+            // Échange à l'aveugle : les deux cartes restent cachées, seul leur trajet croisé se voit.
+            const d = e.data as { ownCardId: string; targetCardId: string };
+            flyCard(null, d.ownCardId, d.targetCardId);
+            flyCard(null, d.targetCardId, d.ownCardId);
             play('swap');
             break;
+          }
           case 'peek':
             play('peek');
             break;
@@ -310,7 +323,6 @@ export function Game({ room }: { room: RoomView }) {
             connected={seatOf(p.id)?.connected ?? true}
             selectable={oppSelectable && p.status === 'active'}
             onTap={(cid) => onTapOpp(p.id, cid)}
-            justChanged={swappedIds}
             canKick={!!seatOf(p.id) && !seatOf(p.id)!.isBot && p.status === 'active' && !votes[p.id]}
             onKick={() => {
               if (confirm(`Lancer un vote pour exclure ${p.name} ?`)) api.send({ t: 'voteKick', target: p.id });
@@ -337,7 +349,7 @@ export function Game({ room }: { room: RoomView }) {
           <div className="held-zone">
             {view.held ? (
               <div className="held" key={view.held.cardId}>
-                <Card face={heldByMe ? view.held.face : null} className={heldByMe ? 'lift' : 'lift dim'} />
+                <Card face={heldByMe ? view.held.face : null} cardId={view.held.cardId} className={heldByMe ? 'lift' : 'lift dim'} />
                 <label>{heldByMe ? 'Votre carte' : `${name(view.held.playerId)} tient une carte`}</label>
               </div>
             ) : (
@@ -357,7 +369,7 @@ export function Game({ room }: { room: RoomView }) {
             >
               {view.discardCount > 3 && <Card face={null} className="shadow shadow-2" />}
               {view.discardCount > 1 && <Card face={null} className="shadow shadow-1" />}
-              {view.discardTop ? <Card face={view.discardTop} className="drop-in" key={view.discardTop.id} /> : <div className="card empty" />}
+              {view.discardTop ? <Card face={view.discardTop} cardId={view.discardTop.id} className="drop-in" key={view.discardTop.id} /> : <div className="card empty" />}
               <span className="count">{view.discardCount}</span>
             </div>
             <label>Défausse</label>
@@ -397,7 +409,6 @@ export function Game({ room }: { room: RoomView }) {
             onTap={onTapOwn}
             onMove={(id, x, y) => api.action({ type: 'moveCard', cardId: id, x, y })}
             onDropDiscard={(id) => api.action({ type: 'matchDiscard', cardId: id })}
-            justChanged={swappedIds}
           />
           <div className="emote-fab-wrap">
             <EmoteButton onPick={(id) => api.emote(id)} />
@@ -424,6 +435,10 @@ export function Game({ room }: { room: RoomView }) {
           </button>
         )}
       </footer>
+
+      {flights.map((f) => (
+        <FlyingCard key={f.id} face={f.face} from={f.from} to={f.to} />
+      ))}
 
       {showLog && (
         <div className="log-panel" onClick={() => setShowLog(false)}>
@@ -460,7 +475,6 @@ function OpponentMat({
   onTap,
   canKick,
   onKick,
-  justChanged,
 }: {
   p: PlayerGameView;
   seat: [number, number];
@@ -471,7 +485,6 @@ function OpponentMat({
   onTap: (cardId: string) => void;
   canKick: boolean;
   onKick: () => void;
-  justChanged?: Set<string>;
 }) {
   const active = view.currentPlayer === p.id;
   const removed = p.status === 'removed';
@@ -503,7 +516,7 @@ function OpponentMat({
       {removed ? (
         <div className="excluded">exclu</div>
       ) : (
-        <Mat cards={p.hand} color={p.color} small selectable={selectable ? 'all' : null} onTap={onTap} justChanged={justChanged} />
+        <Mat cards={p.hand} color={p.color} small selectable={selectable ? 'all' : null} onTap={onTap} />
       )}
       <div className="opp-foot muted">
         {p.cardCount} carte{p.cardCount > 1 ? 's' : ''} · {p.score} pts

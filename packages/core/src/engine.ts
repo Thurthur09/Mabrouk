@@ -297,7 +297,7 @@ function execute(state: GameState, pid: PlayerId, action: Action, ctx: ActionCon
       events.push({
         to: 'all',
         type: 'takeDiscard',
-        data: { playerId: pid, takenCardId: topId, placed: cardFace(mine), takenFace: cardFace(state.cards[topId]) },
+        data: { playerId: pid, takenCardId: topId, discardedCardId: mine.id, placed: cardFace(mine), takenFace: cardFace(state.cards[topId]) },
       });
       state.phase = 'AWAIT_DRAW';
       return;
@@ -320,7 +320,7 @@ function execute(state: GameState, pid: PlayerId, action: Action, ctx: ActionCon
       events.push({
         to: 'all',
         type: 'swapHeld',
-        data: { playerId: pid, placedCardId: held.id, discarded: cardFace(mine) },
+        data: { playerId: pid, placedCardId: held.id, discardedCardId: mine.id, discarded: cardFace(mine) },
       });
       advanceTurn(state, events);
       return;

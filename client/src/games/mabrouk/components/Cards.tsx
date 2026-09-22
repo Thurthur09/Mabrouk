@@ -8,12 +8,14 @@ interface FaceProps {
   className?: string;
   style?: React.CSSProperties;
   title?: string;
+  /** Repère l'élément par l'id de la carte, pour retrouver sa position à l'écran (animations de vol). */
+  cardId?: string;
 }
 
 /** Carte seule (face visible ou dos). Dimensionnée par son conteneur. */
-export function Card({ face, className = '', style, title }: FaceProps) {
+export function Card({ face, className = '', style, title, cardId }: FaceProps) {
   if (!face) {
-    return <div className={`card back ${className}`} style={style} title={title ?? 'Carte cachée'} />;
+    return <div className={`card back ${className}`} style={style} title={title ?? 'Carte cachée'} data-card-id={cardId} />;
   }
   const red = isRedSuit(face.suit);
   return (
@@ -22,6 +24,7 @@ export function Card({ face, className = '', style, title }: FaceProps) {
       style={style}
       key={`${face.rank}${face.suit}`}
       title={title ?? `${rankName(face.rank)} ${SUIT_SYMBOL[face.suit]}`}
+      data-card-id={cardId}
     >
       <span className="corner">
         {rankLabel(face.rank)}
@@ -42,8 +45,6 @@ interface MatProps {
   onMove?: (cardId: string, x: number, y: number) => void;
   onDropDiscard?: (cardId: string) => void;
   small?: boolean;
-  /** Cartes dont l'emplacement vient de changer de contenu (échange) : un anneau bref les met en évidence. */
-  justChanged?: Set<string>;
 }
 
 interface Drag {
@@ -70,7 +71,7 @@ function overDiscard(x: number, y: number): boolean {
  * Glisser une carte : elle suit le doigt/la souris partout à l'écran ; lâchée sur la défausse,
  * c'est une demande de défausse rapide ; lâchée sur le tapis, elle change de place.
  */
-export function Mat({ cards, color, draggable, selectable, selected, onTap, onMove, onDropDiscard, small, justChanged }: MatProps) {
+export function Mat({ cards, color, draggable, selectable, selected, onTap, onMove, onDropDiscard, small }: MatProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   // Position posée localement en attendant la confirmation du serveur (évite tout saut visuel).
@@ -90,12 +91,12 @@ export function Mat({ cards, color, draggable, selectable, selected, onTap, onMo
         const tappable = canTap(c.id);
         const local = settled?.id === c.id ? settled : null;
         const pos = local ?? c.pos;
-        const changed = justChanged?.has(c.id) ?? false;
         return (
           <div
             key={c.id}
-            className={`slot ${dragging ? 'lifted' : ''} ${local ? 'settle' : ''} ${red ? 'penalty' : ''} ${sel ? 'selected' : ''} ${tappable ? 'tappable' : ''} ${draggable ? 'movable' : ''} ${changed ? 'swap-fx' : ''}`}
+            className={`slot ${dragging ? 'lifted' : ''} ${local ? 'settle' : ''} ${red ? 'penalty' : ''} ${sel ? 'selected' : ''} ${tappable ? 'tappable' : ''} ${draggable ? 'movable' : ''}`}
             style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+            data-card-id={c.id}
             onPointerDown={(e) => {
               if (!onTap && !draggable) return;
               (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -156,5 +157,42 @@ export function Mat({ cards, color, draggable, selectable, selected, onTap, onMo
           document.body,
         )}
     </div>
+  );
+}
+
+export interface FlightSpec {
+  id: number;
+  face: FaceView | null;
+  from: DOMRect;
+  to: DOMRect;
+  duration?: number;
+}
+
+/**
+ * Carte volante : décrit un arc au-dessus du plateau entre deux emplacements (via une animation CSS
+ * à base de variables --x0/--y0/--x1/--y1, voir .fly-card dans mabrouk.css), assez lente pour bien
+ * montrer QUELLE carte part et OÙ elle arrive. Rendue en portail dans <body>, comme .drag-ghost.
+ * Sert aux échanges avec la pioche tenue, la défausse, et l'échange à l'aveugle entre joueurs (Game.tsx).
+ */
+export function FlyingCard({ face, from, to, duration = 1.4 }: { face: FaceView | null; from: DOMRect; to: DOMRect; duration?: number }) {
+  const dist = Math.hypot(to.left - from.left, to.top - from.top);
+  const lift = Math.max(130, Math.min(280, dist * 0.4));
+  const style = {
+    '--x0': `${from.left}px`,
+    '--y0': `${from.top}px`,
+    '--w0': `${from.width}px`,
+    '--h0': `${from.height}px`,
+    '--x1': `${to.left}px`,
+    '--y1': `${to.top}px`,
+    '--w1': `${to.width}px`,
+    '--h1': `${to.height}px`,
+    '--lift': `${lift}px`,
+    animationDuration: `${duration}s`,
+  } as React.CSSProperties;
+  return createPortal(
+    <div className="fly-card" style={style}>
+      <Card face={face} className="no-flip" />
+    </div>,
+    document.body,
   );
 }
