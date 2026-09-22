@@ -167,7 +167,6 @@ export function Mat({ cards, color, draggable, selectable, selected, onTap, onMo
 
 export interface FlightSpec {
   id: number;
-  face: FaceView | null;
   from: DOMRect;
   to: DOMRect;
   duration?: number;
@@ -177,9 +176,10 @@ export interface FlightSpec {
  * Carte volante : décrit un arc au-dessus du plateau entre deux emplacements (via une animation CSS
  * à base de variables --x0/--y0/--x1/--y1, voir .fly-card dans mabrouk.css), assez lente pour bien
  * montrer QUELLE carte part et OÙ elle arrive. Rendue en portail dans <body>, comme .drag-ghost.
- * Sert aux échanges avec la pioche tenue, la défausse, et l'échange à l'aveugle entre joueurs (Game.tsx).
+ * Toujours affichée dos visible (jamais la face) : la carte reste secrète pendant tout le vol, quel
+ * que soit l'échange (avec la pioche tenue, la défausse, ou entre deux joueurs) — voir Game.tsx.
  */
-export function FlyingCard({ face, from, to, duration = 0.75 }: { face: FaceView | null; from: DOMRect; to: DOMRect; duration?: number }) {
+export function FlyingCard({ from, to, duration = 0.75 }: { from: DOMRect; to: DOMRect; duration?: number }) {
   const dist = Math.hypot(to.left - from.left, to.top - from.top);
   const lift = Math.max(90, Math.min(200, dist * 0.3));
   const style = {
@@ -196,7 +196,7 @@ export function FlyingCard({ face, from, to, duration = 0.75 }: { face: FaceView
   } as React.CSSProperties;
   return createPortal(
     <div className="fly-card" style={style}>
-      <Card face={face} className="no-flip" />
+      <Card face={null} className="no-flip" />
     </div>,
     document.body,
   );

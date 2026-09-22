@@ -1483,11 +1483,11 @@ button.fab-trigger {
   .mabrouk-scope .table {
     position: absolute;
     left: 50%;
-    top: 21%;
-    /* Réservé sous la table : hauteur du tapis (.mat-wrap, carré) + nameplate + marge, pour
-       ne jamais chevaucher .me-zone qui est ancré en bas de .stage (voir plus bas, même formule
-       que .mat-wrap ci-dessous). */
-    bottom: calc(clamp(230px, 38vh, 400px) + 88px);
+    top: 27%;
+    /* Réservé sous la table : hauteur du tapis (.mat-wrap, désormais plus large que haut) + nameplate
+       + marge, pour ne jamais chevaucher .me-zone qui est ancré en bas de .stage (voir la même
+       proportion sur .mat-wrap ci-dessous : largeur / 1.9 ≈ hauteur réelle du tapis). */
+    bottom: calc(clamp(170px, 24vh, 300px) + 88px);
     transform: translateX(-50%);
     flex: none;
     background: none;
@@ -1512,8 +1512,17 @@ button.fab-trigger {
     transform: translateX(-50%);
     z-index: 4;
   }
-  .mabrouk-scope .mat-wrap {
-    width: clamp(230px, 38vh, 400px);
+  .mabrouk-scope /* Tapis perso plus large que haut (au lieu d'un carré) pour rester cohérent avec la
+     table ovale : mêmes positions de cartes en %, mais étalées horizontalement et resserrées
+     verticalement. Cartes réduites (.me-zone .slot) pour ne pas se chevaucher malgré la hauteur réduite. */
+  .mat-wrap {
+    width: clamp(300px, 46vh, 520px);
+  }
+  .mabrouk-scope .me-zone .mat {
+    aspect-ratio: 1.55 / 1;
+  }
+  .mabrouk-scope .me-zone .slot {
+    width: 21%;
   }
   .mabrouk-scope .actions {
     padding-top: 2px;
