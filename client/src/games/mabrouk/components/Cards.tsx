@@ -42,6 +42,8 @@ interface MatProps {
   onMove?: (cardId: string, x: number, y: number) => void;
   onDropDiscard?: (cardId: string) => void;
   small?: boolean;
+  /** Cartes dont l'emplacement vient de changer de contenu (échange) : un anneau bref les met en évidence. */
+  justChanged?: Set<string>;
 }
 
 interface Drag {
@@ -68,7 +70,7 @@ function overDiscard(x: number, y: number): boolean {
  * Glisser une carte : elle suit le doigt/la souris partout à l'écran ; lâchée sur la défausse,
  * c'est une demande de défausse rapide ; lâchée sur le tapis, elle change de place.
  */
-export function Mat({ cards, color, draggable, selectable, selected, onTap, onMove, onDropDiscard, small }: MatProps) {
+export function Mat({ cards, color, draggable, selectable, selected, onTap, onMove, onDropDiscard, small, justChanged }: MatProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [drag, setDrag] = useState<Drag | null>(null);
   // Position posée localement en attendant la confirmation du serveur (évite tout saut visuel).
@@ -88,10 +90,11 @@ export function Mat({ cards, color, draggable, selectable, selected, onTap, onMo
         const tappable = canTap(c.id);
         const local = settled?.id === c.id ? settled : null;
         const pos = local ?? c.pos;
+        const changed = justChanged?.has(c.id) ?? false;
         return (
           <div
             key={c.id}
-            className={`slot ${dragging ? 'lifted' : ''} ${local ? 'settle' : ''} ${red ? 'penalty' : ''} ${sel ? 'selected' : ''} ${tappable ? 'tappable' : ''} ${draggable ? 'movable' : ''}`}
+            className={`slot ${dragging ? 'lifted' : ''} ${local ? 'settle' : ''} ${red ? 'penalty' : ''} ${sel ? 'selected' : ''} ${tappable ? 'tappable' : ''} ${draggable ? 'movable' : ''} ${changed ? 'swap-fx' : ''}`}
             style={{ left: `${pos.x}%`, top: `${pos.y}%` }}
             onPointerDown={(e) => {
               if (!onTap && !draggable) return;

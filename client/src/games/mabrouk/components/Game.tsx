@@ -46,13 +46,13 @@ function hintFor(view: GameView, name: (id: string) => string, takeMode: boolean
       return 'En attente des autres joueurs…';
     }
     case 'TURN_START':
-      if (mine) return takeMode ? 'Touchez la carte de votre tapis à échanger avec la défausse' : 'À vous ! Mabrouk, échange avec la défausse, ou pioche';
+      if (mine) return takeMode ? 'Touchez la carte de votre tapis à échanger avec la défausse' : 'À vous ! Mabrouk, touchez la défausse pour échanger, ou la pioche pour piocher';
       break;
     case 'AWAIT_DRAW':
-      if (mine) return 'Piochez (obligatoire)';
+      if (mine) return 'Touchez la pioche (obligatoire)';
       break;
     case 'HOLDING':
-      if (mine) return 'Touchez une carte de votre tapis pour l\'échanger, ou défaussez la carte piochée';
+      if (mine) return 'Touchez une carte de votre tapis pour l\'échanger, ou la défausse pour vous en défausser';
       break;
     case 'EFFECT':
       if (mine) {
@@ -90,6 +90,25 @@ export function Game({ room }: { room: RoomView }) {
   const flashId = useRef(0);
   const [bubbles, setBubbles] = useState<Record<string, { id: number; emote: string }>>({});
   const bubbleId = useRef(0);
+  const [swapFx, setSwapFx] = useState<Record<string, number>>({});
+  const swapFxId = useRef(0);
+
+  const flashSwap = (ids: string[]) => {
+    const id = ++swapFxId.current;
+    setSwapFx((s) => {
+      const next = { ...s };
+      for (const cid of ids) next[cid] = id;
+      return next;
+    });
+    setTimeout(() => {
+      setSwapFx((s) => {
+        const next = { ...s };
+        for (const cid of ids) if (next[cid] === id) delete next[cid];
+        return next;
+      });
+    }, 700);
+  };
+  const swappedIds = useMemo(() => new Set(Object.keys(swapFx)), [swapFx]);
 
   useEffect(() => {
     return onEmotes((playerId, emote) => {
@@ -121,11 +140,18 @@ export function Game({ room }: { room: RoomView }) {
             if (e.type === 'draw') play('draw');
             break;
           case 'discardHeld':
+            play('discard');
+            break;
           case 'takeDiscard':
+            flashSwap([(e.data as { takenCardId: string }).takenCardId]);
+            play('discard');
+            break;
           case 'swapHeld':
+            flashSwap([(e.data as { placedCardId: string }).placedCardId]);
             play('discard');
             break;
           case 'swap':
+            flashSwap([(e.data as { ownCardId: string; targetCardId: string }).ownCardId, (e.data as { ownCardId: string; targetCardId: string }).targetCardId]);
             play('swap');
             break;
           case 'peek':
@@ -201,6 +227,7 @@ export function Game({ room }: { room: RoomView }) {
   };
 
   const heldByMe = view.held?.playerId === view.me;
+  const discardClickable = a.canDiscardHeld || (a.canTakeDiscard && !a.canSwapHeld) || a.canMatchDiscard;
   const cols = opponents.length <= 1 ? 1 : opponents.length === 2 ? 2 : 3;
   const votes = room.kickVotes;
   const humansOthers = room.seats.filter((s) => !s.isBot && s.connected);
@@ -283,6 +310,7 @@ export function Game({ room }: { room: RoomView }) {
             connected={seatOf(p.id)?.connected ?? true}
             selectable={oppSelectable && p.status === 'active'}
             onTap={(cid) => onTapOpp(p.id, cid)}
+            justChanged={swappedIds}
             canKick={!!seatOf(p.id) && !seatOf(p.id)!.isBot && p.status === 'active' && !votes[p.id]}
             onKick={() => {
               if (confirm(`Lancer un vote pour exclure ${p.name} ?`)) api.send({ t: 'voteKick', target: p.id });
@@ -294,7 +322,10 @@ export function Game({ room }: { room: RoomView }) {
       <section className="table">
         <div className="piles">
           <div className="pile">
-            <div className="stack">
+            <div
+              className={`stack ${a.canDraw ? 'clickable' : ''} ${a.canDraw && view.phase === 'AWAIT_DRAW' ? 'urgent' : ''}`}
+              onClick={() => a.canDraw && api.action({ type: 'draw' })}
+            >
               {view.deckCount > 3 && <Card face={null} className="shadow shadow-2" />}
               {view.deckCount > 1 && <Card face={null} className="shadow shadow-1" />}
               <Card face={null} />
@@ -315,7 +346,15 @@ export function Game({ room }: { room: RoomView }) {
           </div>
 
           <div className="pile">
-            <div className="stack drop" data-drop="discard">
+            <div
+              className={`stack drop ${discardClickable ? 'clickable' : ''}`}
+              data-drop="discard"
+              onClick={() => {
+                if (a.canDiscardHeld) return api.action({ type: 'discardHeld' });
+                if (a.canTakeDiscard && !a.canSwapHeld) return setTakeMode((v) => !v);
+                if (a.canMatchDiscard) return setQuick((v) => !v);
+              }}
+            >
               {view.discardCount > 3 && <Card face={null} className="shadow shadow-2" />}
               {view.discardCount > 1 && <Card face={null} className="shadow shadow-1" />}
               {view.discardTop ? <Card face={view.discardTop} className="drop-in" key={view.discardTop.id} /> : <div className="card empty" />}
@@ -358,6 +397,7 @@ export function Game({ room }: { room: RoomView }) {
             onTap={onTapOwn}
             onMove={(id, x, y) => api.action({ type: 'moveCard', cardId: id, x, y })}
             onDropDiscard={(id) => api.action({ type: 'matchDiscard', cardId: id })}
+            justChanged={swappedIds}
           />
           <div className="emote-fab-wrap">
             <EmoteButton onPick={(id) => api.emote(id)} />
@@ -377,30 +417,10 @@ export function Game({ room }: { room: RoomView }) {
             📣 Mabrouk
           </button>
         )}
-        {a.canTakeDiscard && !a.canSwapHeld && (
-          <button className={takeMode ? 'on' : ''} onClick={() => setTakeMode((v) => !v)}>
-            ⇄ Échanger avec la défausse
-          </button>
-        )}
-        {a.canDraw && (
-          <button className="primary" onClick={() => api.action({ type: 'draw' })}>
-            🃏 Piocher
-          </button>
-        )}
-        {a.canDiscardHeld && (
-          <button className="primary" onClick={() => api.action({ type: 'discardHeld' })}>
-            ⤓ Défausser
-          </button>
-        )}
         {a.canSkipEffect && <button onClick={() => api.action({ type: 'skipEffect' })}>Passer l'effet</button>}
         {a.canConfirmPeek && (
           <button className="primary" onClick={() => api.action({ type: 'confirmPeek' })}>
             OK, mémorisé
-          </button>
-        )}
-        {a.canMatchDiscard && (
-          <button className={`quick ${quick ? 'on' : ''}`} onClick={() => setQuick((v) => !v)} title="Défausser une carte de même valeur que la défausse (ou glissez-la sur la défausse)">
-            ⚡ Défausse rapide
           </button>
         )}
       </footer>
@@ -440,6 +460,7 @@ function OpponentMat({
   onTap,
   canKick,
   onKick,
+  justChanged,
 }: {
   p: PlayerGameView;
   seat: [number, number];
@@ -450,9 +471,12 @@ function OpponentMat({
   onTap: (cardId: string) => void;
   canKick: boolean;
   onKick: () => void;
+  justChanged?: Set<string>;
 }) {
   const active = view.currentPlayer === p.id;
   const removed = p.status === 'removed';
+  // Trop près du haut de l'écran (table en vue web) pour laisser la place à une bulle au-dessus : on l'affiche en dessous.
+  const bubbleBelow = seat[1] < 15;
   return (
     <div
       className={`opp ${active ? 'active' : ''} ${removed ? 'removed' : ''}`}
@@ -460,7 +484,7 @@ function OpponentMat({
     >
       <div className="opp-head">
         {bubble && (
-          <span className="emote-bubble">
+          <span className={`emote-bubble ${bubbleBelow ? 'below' : ''}`}>
             <EmoteImg id={bubble} />
           </span>
         )}
@@ -479,7 +503,7 @@ function OpponentMat({
       {removed ? (
         <div className="excluded">exclu</div>
       ) : (
-        <Mat cards={p.hand} color={p.color} small selectable={selectable ? 'all' : null} onTap={onTap} />
+        <Mat cards={p.hand} color={p.color} small selectable={selectable ? 'all' : null} onTap={onTap} justChanged={justChanged} />
       )}
       <div className="opp-foot muted">
         {p.cardCount} carte{p.cardCount > 1 ? 's' : ''} · {p.score} pts

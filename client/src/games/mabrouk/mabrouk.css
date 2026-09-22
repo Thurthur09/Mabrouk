@@ -304,6 +304,14 @@ button.fab-trigger {
   z-index: 60;
   animation: emotePop 1.9s ease forwards;
 }
+.mabrouk-scope /* Les joueurs assis tout en haut de la table (web) n'ont pas de place au-dessus d'eux :
+   la bulle s'affiche alors en dessous de l'avatar pour ne jamais sortir de l'écran. */
+.emote-bubble.below {
+  bottom: auto;
+  top: 100%;
+  margin-bottom: 0;
+  margin-top: 8px;
+}
 @keyframes emotePop {
   0% {
     opacity: 0;
@@ -573,6 +581,8 @@ button.fab-trigger {
   text-overflow: ellipsis;
 }
 .mabrouk-scope .banner {
+  position: relative;
+  z-index: 45;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -719,6 +729,25 @@ button.fab-trigger {
   position: relative;
   width: clamp(44px, 12vw, 66px);
 }
+.mabrouk-scope /* Pioche et défausse cliquables : on remplace les boutons du bas par un tap direct sur la pile */
+.stack.clickable {
+  cursor: pointer;
+}
+.mabrouk-scope .stack.clickable .card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.mabrouk-scope .stack.clickable:hover .card {
+  transform: translateY(-4px);
+}
+.mabrouk-scope .stack.clickable:active .card {
+  transform: translateY(0) scale(0.97);
+}
+.mabrouk-scope /* Pioche obligatoire : halo pour bien montrer où taper vu qu'il n'y a plus de bouton "Piocher" */
+.stack.urgent .card {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  animation: glow 1.2s ease-in-out infinite;
+}
 .mabrouk-scope .stack .count {
   position: absolute;
   right: -8px;
@@ -852,9 +881,6 @@ button.fab-trigger {
   flex: 1 1 auto;
   min-width: 96px;
 }
-.mabrouk-scope .actions .quick {
-  flex: 0 0 auto;
-}
 
 .mabrouk-scope /* ------------------------------------------------------------- Tapis et cartes */
 .mat {
@@ -921,6 +947,35 @@ button.fab-trigger {
 }
 .mabrouk-scope .slot.penalty {
   z-index: 20;
+}
+.mabrouk-scope /* Anneau bref sur l'emplacement d'une carte qui vient d'être échangée (pioche/tapis/adversaire) :
+   sans lui, deux cartes cachées identiques visuellement ne montrent aucun changement à l'écran. */
+.slot.swap-fx {
+  z-index: 25;
+}
+.mabrouk-scope .slot.swap-fx::after {
+  content: '';
+  position: absolute;
+  inset: -8%;
+  border-radius: 14%/10%;
+  border: 3px solid var(--accent);
+  box-shadow: 0 0 18px var(--accent);
+  pointer-events: none;
+  animation: swapRing 0.7s ease-out both;
+}
+@keyframes swapRing {
+  0% {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.3);
+  }
 }
 /* Carte suivant le doigt / la souris pendant un glisser. Rendue via createPortal directement
    dans <body> (voir Cards.tsx) — donc HORS de .mabrouk-scope : ce sélecteur doit rester global,
@@ -1322,7 +1377,8 @@ button.fab-trigger {
     width: 100%;
     height: 100dvh;
     padding: 10px 28px 20px;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: visible;
     gap: 6px;
   }
   .mabrouk-scope /* Classement en colonne sur le côté gauche pendant la partie (au lieu du haut du plateau,
